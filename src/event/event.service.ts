@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Event } from './event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -15,6 +16,14 @@ export class EventService {
     @InjectRepository(Event)
     private eventRepository: MongoRepository<Event>,
   ) {}
+
+  private toObjectId(id: string) {
+    try {
+      return new ObjectId(id);
+    } catch {
+      throw new BadRequestException('id invalide');
+    }
+  }
 
   async creatEvent(dto: CreateEventDto) {
     const capacity = Number(dto.capacity);
@@ -42,8 +51,10 @@ export class EventService {
   }
 
   async showEventById(id: string) {
+    const _id = this.toObjectId(id);
+
     const event = await this.eventRepository.findOne({
-      where: { _id: id, available: true },
+      where: { _id, available: true },
     });
 
     if (!event) {
@@ -54,8 +65,10 @@ export class EventService {
   }
 
   async updateEvent(id: string, dto: UpdateEventDto) {
+    const _id = this.toObjectId(id);
+
     const event = await this.eventRepository.findOne({
-      where: { _id: id },
+      where: { _id },
     });
 
     if (!event) {
@@ -86,15 +99,41 @@ export class EventService {
   }
 
   async deleteEvent(id: string) {
+    const _id = this.toObjectId(id);
+
     const event = await this.eventRepository.findOne({
-      where: { _id: id },
+      where: { _id },
     });
 
     if (!event) {
       throw new NotFoundException("event n'existe pas");
     }
 
-    await this.eventRepository.delete(id);
+    await this.eventRepository.delete(_id);
     return { message: 'event supprimé avec succès' };
+  }
+
+  async reservationEvent(id: string) {
+    const _id = this.toObjectId(id);
+
+    const event = await this.eventRepository.findOne({
+      where: { _id },
+    });
+
+    if (!event) {
+      throw new NotFoundException("event n'existe pas");
+    }
+
+    if (!event.available || event.capacity <= 0) {
+      throw new BadRequestException("event n'est plus disponible");
+    }
+
+    event.capacity = event.capacity - 1;
+
+    if (event.capacity === 0) {
+      event.available = false;
+    }
+
+    return this.eventRepository.save(event);
   }
 }

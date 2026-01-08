@@ -31,4 +31,9 @@ export class EventController {
   deleteEvent(@Param('id') id: string) {
     return this.eventService.deleteEvent(id);
   }
+
+  @Get('reservationEvent/:id')
+  reservationEvent(@Param('id') id: string) {
+    return this.eventService.reservationEvent(id);
+  }
 }
