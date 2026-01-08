@@ -26,8 +26,7 @@ export class EventService {
   }
 
   async creatEvent(dto: CreateEventDto) {
-    const capacity = Number(dto.capacity);
-    if (capacity <= 0) {
+    if (dto.capacity <= 0) {
       throw new BadRequestException('capacity doit etre strict superieure à 0');
     }
 
@@ -67,31 +66,10 @@ export class EventService {
   async updateEvent(id: string, dto: UpdateEventDto) {
     const _id = this.toObjectId(id);
 
-    const event = await this.eventRepository.findOne({
-      where: { _id },
-    });
+    const event = await this.eventRepository.findOne({ where: { _id } });
 
     if (!event) {
       throw new NotFoundException("event n'existe pas");
-    }
-
-    if (dto.capacity !== undefined && dto.capacity <= 0) {
-      throw new BadRequestException(
-        'capacity doit etre strictement superieure à 0',
-      );
-    }
-
-    if (dto.date) {
-      const eventDate = new Date(dto.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      eventDate.setHours(0, 0, 0, 0);
-
-      if (eventDate < today) {
-        throw new BadRequestException(
-          "la date ne doit pas être antérieure à la date actuelle du systeme",
-        );
-      }
     }
 
     Object.assign(event, dto);
@@ -101,9 +79,7 @@ export class EventService {
   async deleteEvent(id: string) {
     const _id = this.toObjectId(id);
 
-    const event = await this.eventRepository.findOne({
-      where: { _id },
-    });
+    const event = await this.eventRepository.findOne({ where: { _id } });
 
     if (!event) {
       throw new NotFoundException("event n'existe pas");
@@ -116,9 +92,7 @@ export class EventService {
   async reservationEvent(id: string) {
     const _id = this.toObjectId(id);
 
-    const event = await this.eventRepository.findOne({
-      where: { _id },
-    });
+    const event = await this.eventRepository.findOne({ where: { _id } });
 
     if (!event) {
       throw new NotFoundException("event n'existe pas");
@@ -128,7 +102,7 @@ export class EventService {
       throw new BadRequestException("event n'est plus disponible");
     }
 
-    event.capacity = event.capacity - 1;
+    event.capacity -= 1;
 
     if (event.capacity === 0) {
       event.available = false;
@@ -139,14 +113,8 @@ export class EventService {
 
   async searchEvent(name?: string, category?: string) {
     const query: any = {};
-
-    if (name) {
-      query.name = name;
-    }
-
-    if (category) {
-      query.category = category;
-    }
+    if (name) query.name = name;
+    if (category) query.category = category;
 
     const events = await this.eventRepository.find({ where: query });
 
@@ -157,29 +125,37 @@ export class EventService {
     return events;
   }
 
-  async paginateEvents(page: number, limit: number) {
-    if (!page || page <= 0) {
-      throw new BadRequestException('page invalide');
-    }
-
-    if (!limit || limit <= 0) {
-      throw new BadRequestException('limit invalide');
-    }
-
-    const skip = (page - 1) * limit;
-
-    const data = await this.eventRepository.find({
-      skip,
-      take: limit,
+  async calculateAverageCapacity() {
+    const events = await this.eventRepository.find({
+      where: { available: true },
     });
 
-    const total = await this.eventRepository.count();
+    if (events.length === 0) {
+      throw new NotFoundException('aucun event disponible');
+    }
 
-    return {
-      page,
-      limit,
-      total,
-      data,
-    };
+    const totalCapacity = events.reduce(
+      (sum, event) => sum + event.capacity,
+      0,
+    );
+
+    return { averageCapacity: totalCapacity / events.length };
+  }
+
+  async increaseCapacity(id: string, available: boolean) {
+    const _id = this.toObjectId(id);
+
+    const event = await this.eventRepository.findOne({ where: { _id } });
+
+    if (!event) {
+      throw new NotFoundException("event n'existe pas");
+    }
+
+    if (!available || !event.available) {
+      throw new BadRequestException("event n'est pas disponible");
+    }
+
+    event.capacity = Math.ceil(event.capacity * 1.1);
+    return this.eventRepository.save(event);
   }
 }
