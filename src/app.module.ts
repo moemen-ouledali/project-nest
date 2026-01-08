@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -9,10 +10,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       type: 'mongodb',
       host: 'localhost',
       port: 27017,
-      database: 'nest_db',
+      database: 'Examen_Jcs',
       synchronize: true,
       autoLoadEntities: true,
     }),
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],
