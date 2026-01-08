@@ -1,0 +1,85 @@
+Create event
+
+Method : POST
+URL :
+/event/creatEvent
+
+Body (JSON) :
+{
+"name": "Event 1",
+"category": "General",
+"capacity": 10,
+"available": true,
+"date": "2026-02-01"
+}
+
+Get all events
+
+Method : GET
+URL :
+/event/showEvent
+
+Get event by id (only if available = true)
+
+Method : GET
+URL :
+/event/showEvent/ID_EVENT
+
+Example :
+/event/showEvent/695f729271a8d06a453784ad
+
+Update event
+
+Method : PUT
+URL :
+/event/UpdateEvent/ID_EVENT
+
+Body (JSON) :
+{
+"capacity": 20,
+"date": "2026-03-01"
+}
+
+Delete event
+
+Method : DELETE
+URL :
+/event/DeleteEvent/ID_EVENT
+
+Reservation event (decrease capacity by 1)
+
+Method : GET
+URL :
+/event/reservationEvent/ID_EVENT
+
+
+Search event by name and category
+
+Method : GET
+URL :
+/event/search?name=VivaTech&Category=Technology
+
+
+Calculate average capacity of available events
+
+Method : GET
+URL :
+/event/calculate-capacity
+
+Increase capacity by 10% if available = true
+
+Method : PATCH
+URL :
+/event/ID_EVENT/increase-capacity?available=true
+
+Example :
+/event/695f729271a8d06a453784ad/increase-capacity?available=true
+
+Interceptor test (available = false)
+
+Set event available = false
+
+Method : GET
+/event/showEvent
+or
+/event/showEvent/ID_EVENT
