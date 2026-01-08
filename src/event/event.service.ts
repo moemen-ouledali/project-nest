@@ -136,4 +136,50 @@ export class EventService {
 
     return this.eventRepository.save(event);
   }
+
+  async searchEvent(name?: string, category?: string) {
+    const query: any = {};
+
+    if (name) {
+      query.name = name;
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    const events = await this.eventRepository.find({ where: query });
+
+    if (events.length === 0) {
+      throw new NotFoundException('aucun event trouvé');
+    }
+
+    return events;
+  }
+
+  async paginateEvents(page: number, limit: number) {
+    if (!page || page <= 0) {
+      throw new BadRequestException('page invalide');
+    }
+
+    if (!limit || limit <= 0) {
+      throw new BadRequestException('limit invalide');
+    }
+
+    const skip = (page - 1) * limit;
+
+    const data = await this.eventRepository.find({
+      skip,
+      take: limit,
+    });
+
+    const total = await this.eventRepository.count();
+
+    return {
+      page,
+      limit,
+      total,
+      data,
+    };
+  }
 }

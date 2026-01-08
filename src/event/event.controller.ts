@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventService } from './event.service';
@@ -35,5 +35,18 @@ export class EventController {
   @Get('reservationEvent/:id')
   reservationEvent(@Param('id') id: string) {
     return this.eventService.reservationEvent(id);
+  }
+
+  @Get('search')
+  searchEvent(
+    @Query('name') name: string,
+    @Query('Category') category: string,
+  ) {
+    return this.eventService.searchEvent(name, category);
+  }
+
+  @Get('calculate-capacity')
+  calculateCapacity() {
+    return this.eventService.calculateAverageCapacity();
   }
 }
